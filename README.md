@@ -1,4 +1,8 @@
-## 🚀 Getting Started
+# DevOps & Productivity Metrics Generator
+
+A Go application that collects and analyzes development metrics from Bitbucket and Jira to help teams measure productivity and identify process improvements.
+
+## 🚀 Quick Start
 
 ### 1. **Generate Sample Configuration**
 ```bash
@@ -60,20 +64,20 @@ go run main.go
 **Jira Data Center:**
 - Use your regular password or configure personal access tokens
 
-## 📊 Features
+## ✅ Features
 
-✅ **Bitbucket Integration:**
+**Bitbucket Integration:**
 - Fetches commits with author and timestamps
 - Retrieves all PRs with status, reviewers, and diff stats
 - Calculates line changes from PR diffs
 
-✅ **Jira Integration:**
+**Jira Integration:**
 - Fetches issues with full changelog
 - Extracts story points or time estimates
 - Tracks status transitions (In Progress → Done)
 - Works with both Jira Cloud and Data Center
 
-✅ **Environment Variables Support:**
+**Environment Variables Support:**
 ```bash
 export BITBUCKET_URL="https://bitbucket.company.com"
 export BITBUCKET_TOKEN="your-token"
@@ -81,16 +85,62 @@ export BITBUCKET_TOKEN="your-token"
 go run main.go
 ```
 
-## 📈 Output
+## 📊 Output
 
 The tool generates:
 - **Console Report**: Beautiful formatted summary
 - **metrics.json**: Full detailed metrics
 - **metrics.csv**: Import into Excel/Google Sheets
 
-Would you like me to add features like:
-- Scheduled runs with cron
-- Slack/email notifications
-- Trend analysis over time
-- Custom date ranges
-- Additional metrics (DORA metrics, deployment frequency)?
+## 🏗️ Project Structure
+
+```
+devops-metrics-go/
+├── cmd/
+│   └── main.go
+├── config/
+│   └── config.go
+├── api/
+│   └── client.go
+├── bitbucket/
+│   ├── types.go
+│   └── client.go
+├── jira/
+│   ├── types.go
+│   └── client.go
+├── metrics/
+│   └── calculator.go
+├── report/
+│   └── reporter.go
+├── go.mod
+├── config.sample.json
+└── README.md
+```
+
+## 📈 Key Metrics
+
+### Top 3 Development Metrics
+
+1. **Lead Time (Idea to Done)** - Directly measures speed of value delivery
+2. **Cycle Time (Development Start to Done)** - Measures actual development efficiency  
+3. **Deployment Frequency (PRs Merged/Released)** - Key DORA metric for team maturity
+
+### Additional Metrics
+
+**From Commits:**
+- Commit Frequency, Code Churn, Active Days, Bus Factor
+
+**From Pull Requests:**  
+- PR Cycle Time, Review Time, Merge Success Rate, Review Load
+
+**From Jira Stories:**
+- Throughput, Velocity, Work In Progress, Effort Accuracy
+
+## 💡 Pro Tip: The Golden Ratio
+
+**Lead Time ÷ Cycle Time = Flow Efficiency**
+
+If Lead Time is 20 days but Cycle Time is 5 days, your work is sitting idle 75% of the time! This reveals waste in your process.
+
+**Elite teams:** Flow Efficiency > 40%
+**Average teams:** Flow Efficiency < 15%
