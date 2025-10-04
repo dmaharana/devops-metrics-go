@@ -25,6 +25,10 @@ A web server that provides REST API endpoints for Bitbucket and Jira metrics usi
     }
     ```
 
+### GitHub Metrics (new!)
+- `GET /api/github/metrics` - Returns commit and PR metrics
+  - **Response**: Same format as Bitbucket metrics
+
 ### Jira Metrics  
 - `GET /api/jira/metrics` - Returns Jira story metrics
   - **Response**:
@@ -42,7 +46,7 @@ A web server that provides REST API endpoints for Bitbucket and Jira metrics usi
     ```
 
 ### All Metrics
-- `GET /api/metrics` - Returns all metrics combined
+- `GET /api/metrics` - Returns all metrics combined from all sources
   - **Response**: Complete team metrics including all data
 
 ## Usage

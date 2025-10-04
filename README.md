@@ -24,6 +24,16 @@ Edit `config.json` with your details:
 }
 ```
 
+**For GitHub (new!):**
+```json
+{
+  "github_url": "https://github.com",
+  "github_token": "your-personal-access-token", 
+  "github_owner": "company",
+  "github_repo": "my-repo"
+}
+```
+
 **For Jira Data Center:**
 ```json
 {
@@ -47,15 +57,37 @@ Edit `config.json` with your details:
 ```
 
 ### 3. **Run the Analysis**
+
+**CLI Mode (traditional):**
 ```bash
 go run main.go
 ```
+
+**Web Server Mode (new!):**
+```bash
+# Start web API server
+go run main.go --server
+
+# Or specify port
+go run main.go --server --port 8080
+```
+
+**Web API Endpoints:**
+- `GET /health` - Health check
+- `GET /api/bitbucket/metrics` - Bitbucket metrics
+- `GET /api/github/metrics` - GitHub metrics (new!)
+- `GET /api/jira/metrics` - Jira metrics
+- `GET /api/metrics` - All metrics combined
 
 ## 🔑 Getting API Tokens
 
 **Bitbucket Data Center:**
 - Go to Profile → Manage account → Personal access tokens
 - Create token with `REPO_READ` permission
+
+**GitHub:**
+- Go to Settings → Developer settings → Personal access tokens
+- Create token with `repo` scope for private repos, `public_repo` for public repos
 
 **Jira Cloud:**
 - Go to https://id.atlassian.com/manage-profile/security/api-tokens
@@ -65,6 +97,12 @@ go run main.go
 - Use your regular password or configure personal access tokens
 
 ## ✅ Features
+
+**GitHub Integration (new!):**
+- Fetches commits from all branches with author info
+- Retrieves pull requests with reviews and timeline
+- Supports GitHub's GraphQL API for efficient data fetching
+- Rate limiting with exponential backoff
 
 **Bitbucket Integration:**
 - Fetches commits with author and timestamps
@@ -79,9 +117,27 @@ go run main.go
 
 **Environment Variables Support:**
 ```bash
+# GitHub (new!)
+export GITHUB_URL="https://github.com"          # Optional for GitHub.com
+export GITHUB_TOKEN="your-token"
+export GITHUB_OWNER="company"
+export GITHUB_REPO="repo-name"
+
+# Bitbucket  
 export BITBUCKET_URL="https://bitbucket.company.com"
 export BITBUCKET_TOKEN="your-token"
-# ... etc
+export BITBUCKET_PROJECT="PROJECT"
+export BITBUCKET_REPO="repo-slug"
+
+# Jira
+export JIRA_URL="https://yoursite.atlassian.net"
+export JIRA_USERNAME="your-email@company.com"
+export JIRA_TOKEN="api-token"
+export JIRA_PROJECT="PROJ"
+export JIRA_IS_CLOUD="true"
+
+# Optional
+export DAYS_TO_ANALYZE=30
 go run main.go
 ```
 
@@ -97,12 +153,17 @@ The tool generates:
 ```
 devops-metrics-go/
 ├── cmd/
-│   └── main.go
+│   ├── main.go
+│   └── web/
+│       └── main.go
 ├── config/
 │   └── config.go
 ├── api/
 │   └── client.go
 ├── bitbucket/
+│   ├── types.go
+│   └── client.go
+├── github/          # New!
 │   ├── types.go
 │   └── client.go
 ├── jira/
@@ -112,8 +173,11 @@ devops-metrics-go/
 │   └── calculator.go
 ├── report/
 │   └── reporter.go
+├── web/            # New!
+│   └── server.go
 ├── go.mod
 ├── config.sample.json
+├── WEB_API.md      # API documentation
 └── README.md
 ```
 

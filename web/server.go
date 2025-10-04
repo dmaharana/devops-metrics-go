@@ -8,6 +8,7 @@ import (
 
 	"devops-metrics/bitbucket"
 	"devops-metrics/config"
+	"devops-metrics/github"
 	"devops-metrics/jira"
 	"devops-metrics/metrics"
 
@@ -55,6 +56,7 @@ func (s *Server) setupRoutes() {
 	// API endpoints
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/bitbucket/metrics", s.getBitbucketMetrics)
+		r.Get("/github/metrics", s.getGitHubMetrics)
 		r.Get("/jira/metrics", s.getJiraMetrics)
 		r.Get("/metrics", s.getAllMetrics)
 	})
@@ -114,6 +116,76 @@ func (s *Server) getBitbucketMetrics(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// getGitHubMetrics calculates and returns GitHub metrics
+func (s *Server) getGitHubMetrics(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	ghClient := github.NewClient(s.config)
+
+	// Fetch GitHub data
+	commits, err := ghClient.FetchCommits()
+	if err != nil {
+		log.Printf("❌ Error fetching GitHub commits: %v", err)
+		http.Error(w, "Error fetching GitHub commits", http.StatusInternalServerError)
+		return
+	}
+
+	prs, err := ghClient.FetchPRs()
+	if err != nil {
+		log.Printf("❌ Error fetching GitHub PRs: %v", err)
+		http.Error(w, "Error fetching GitHub PRs", http.StatusInternalServerError)
+		return
+	}
+
+	// Convert to Bitbucket format for metrics calculation
+	bbCommits := make([]bitbucket.Commit, len(commits))
+	for i, c := range commits {
+		bbCommits[i] = bitbucket.Commit{
+			Hash:         c.Hash,
+			Author:       c.Author,
+			Date:         c.Date,
+			Message:      c.Message,
+			LinesAdded:   c.LinesAdded,
+			LinesDeleted: c.LinesDeleted,
+		}
+	}
+
+	bbPRs := make([]bitbucket.PullRequest, len(prs))
+	for i, p := range prs {
+		bbPRs[i] = bitbucket.PullRequest{
+			ID:            p.ID,
+			Author:        p.Author,
+			CreatedAt:     p.CreatedAt,
+			MergedAt:      p.MergedAt,
+			ClosedAt:      p.ClosedAt,
+			FirstReviewAt: p.FirstReviewAt,
+			LinesChanged:  p.LinesChanged,
+			Reviewers:     p.Reviewers,
+			Status:        p.Status,
+		}
+	}
+
+	// Calculate GitHub metrics
+	commitMetrics := metrics.CalculateCommitMetrics(bbCommits)
+	prMetrics := metrics.CalculatePRMetrics(bbPRs)
+
+	response := map[string]interface{}{
+		"status": "success",
+		"data": map[string]interface{}{
+			"commit_metrics": commitMetrics,
+			"pr_metrics":     prMetrics,
+		},
+		"stats": map[string]int{
+			"commits": len(commits),
+			"prs":     len(prs),
+		},
+		"timestamp": time.Now().UTC(),
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
 // getJiraMetrics calculates and returns Jira metrics
 func (s *Server) getJiraMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -150,26 +222,78 @@ func (s *Server) getJiraMetrics(w http.ResponseWriter, r *http.Request) {
 func (s *Server) getAllMetrics(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
-	bbClient := bitbucket.NewClient(s.config)
-	jClient := jira.NewClient(s.config)
+	var commits []bitbucket.Commit
+	var prs []bitbucket.PullRequest
+	var stories []jira.JiraStory
 
-	// Fetch all data
-	commits, err := bbClient.FetchCommits()
-	if err != nil {
-		log.Printf("❌ Error fetching commits: %v", err)
-		commits = []bitbucket.Commit{}
+	// Fetch Bitbucket data
+	if s.config.BitbucketURL != "" {
+		bbClient := bitbucket.NewClient(s.config)
+		bbCommits, err := bbClient.FetchCommits()
+		if err != nil {
+			log.Printf("❌ Error fetching Bitbucket commits: %v", err)
+		} else {
+			commits = append(commits, bbCommits...)
+		}
+
+		bbPRs, err := bbClient.FetchPRs()
+		if err != nil {
+			log.Printf("❌ Error fetching Bitbucket PRs: %v", err)
+		} else {
+			prs = append(prs, bbPRs...)
+		}
 	}
 
-	prs, err := bbClient.FetchPRs()
-	if err != nil {
-		log.Printf("❌ Error fetching PRs: %v", err)
-		prs = []bitbucket.PullRequest{}
+	// Fetch GitHub data
+	if s.config.GitHubURL != "" {
+		ghClient := github.NewClient(s.config)
+		ghCommits, err := ghClient.FetchCommits()
+		if err != nil {
+			log.Printf("❌ Error fetching GitHub commits: %v", err)
+		} else {
+			// Convert GitHub commits to Bitbucket format
+			for _, c := range ghCommits {
+				commits = append(commits, bitbucket.Commit{
+					Hash:         c.Hash,
+					Author:       c.Author,
+					Date:         c.Date,
+					Message:      c.Message,
+					LinesAdded:   c.LinesAdded,
+					LinesDeleted: c.LinesDeleted,
+				})
+			}
+		}
+
+		ghPRs, err := ghClient.FetchPRs()
+		if err != nil {
+			log.Printf("❌ Error fetching GitHub PRs: %v", err)
+		} else {
+			// Convert GitHub PRs to Bitbucket format
+			for _, p := range ghPRs {
+				prs = append(prs, bitbucket.PullRequest{
+					ID:            p.ID,
+					Author:        p.Author,
+					CreatedAt:     p.CreatedAt,
+					MergedAt:      p.MergedAt,
+					ClosedAt:      p.ClosedAt,
+					FirstReviewAt: p.FirstReviewAt,
+					LinesChanged:  p.LinesChanged,
+					Reviewers:     p.Reviewers,
+					Status:        p.Status,
+				})
+			}
+		}
 	}
 
-	stories, err := jClient.FetchIssues()
-	if err != nil {
-		log.Printf("❌ Error fetching Jira issues: %v", err)
-		stories = []jira.JiraStory{}
+	// Fetch Jira data
+	if s.config.JiraURL != "" {
+		jClient := jira.NewClient(s.config)
+		var err error
+		stories, err = jClient.FetchIssues()
+		if err != nil {
+			log.Printf("❌ Error fetching Jira issues: %v", err)
+			stories = []jira.JiraStory{}
+		}
 	}
 
 	// Calculate all metrics

@@ -10,14 +10,18 @@ import (
 type Config struct {
 	BitbucketURL      string `json:"bitbucket_url"`       // e.g., https://bitbucket.company.com
 	BitbucketToken    string `json:"bitbucket_token"`     // Personal access token
-	JiraURL           string `json:"jira_url"`            // e.g., https://jira.company.com or https://yoursite.atlassian.net
-	JiraUsername      string `json:"jira_username"`       // Email for cloud, username for DC
-	JiraToken         string `json:"jira_token"`          // API token for cloud, password for DC
-	JiraProject       string `json:"jira_project"`        // Project key
 	BitbucketProject  string `json:"bitbucket_project"`   // Project key
 	BitbucketRepo     string `json:"bitbucket_repo"`      // Repository slug
-	DaysToAnalyze     int    `json:"days_to_analyze"`     // Number of days to look back
-	IsJiraCloud       bool   `json:"is_jira_cloud"`       // true for Cloud, false for DC
+	GitHubURL       string `json:"github_url"`          // e.g., https://github.com
+	GitHubToken     string `json:"github_token"`        // Personal access token
+	GitHubOwner     string `json:"github_owner"`        // Repository owner (user or org)
+	GitHubRepo      string `json:"github_repo"`         // Repository name
+	JiraURL         string `json:"jira_url"`            // e.g., https://jira.company.com or https://yoursite.atlassian.net
+	JiraUsername    string `json:"jira_username"`       // Email for cloud, username for DC
+	JiraToken       string `json:"jira_token"`          // API token for cloud, password for DC
+	JiraProject     string `json:"jira_project"`        // Project key
+	DaysToAnalyze   int    `json:"days_to_analyze"`     // Number of days to look back
+	IsJiraCloud     bool   `json:"is_jira_cloud"`       // true for Cloud, false for DC
 }
 
 // LoadConfig loads configuration from file or environment variables
@@ -41,7 +45,11 @@ func LoadConfig(filename string) (Config, error) {
 		BitbucketToken:   os.Getenv("BITBUCKET_TOKEN"),
 		BitbucketProject: os.Getenv("BITBUCKET_PROJECT"),
 		BitbucketRepo:    os.Getenv("BITBUCKET_REPO"),
-		JiraURL:          os.Getenv("JIRA_URL"),
+		GitHubURL:       os.Getenv("GITHUB_URL"),
+		GitHubToken:     os.Getenv("GITHUB_TOKEN"),
+		GitHubOwner:     os.Getenv("GITHUB_OWNER"),
+		GitHubRepo:      os.Getenv("GITHUB_REPO"),
+		JiraURL:         os.Getenv("JIRA_URL"),
 		JiraUsername:     os.Getenv("JIRA_USERNAME"),
 		JiraToken:        os.Getenv("JIRA_TOKEN"),
 		JiraProject:      os.Getenv("JIRA_PROJECT"),
@@ -65,7 +73,11 @@ func CreateSampleConfig() error {
 		BitbucketToken:   "your-bitbucket-token",
 		BitbucketProject: "PROJECT",
 		BitbucketRepo:    "repository-slug",
-		JiraURL:          "https://jira.company.com",
+		GitHubURL:       "https://github.com",
+		GitHubToken:     "your-github-token",
+		GitHubOwner:     "your-organization",
+		GitHubRepo:      "repository-name",
+		JiraURL:         "https://jira.company.com",
 		JiraUsername:     "your-username",
 		JiraToken:        "your-jira-token",
 		JiraProject:      "PROJ",

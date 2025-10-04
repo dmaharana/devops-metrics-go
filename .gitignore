@@ -4,6 +4,8 @@
 *.dll
 *.so
 *.dylib
+build/
+dist/
 
 # Configuration files with sensitive data
 config.json
