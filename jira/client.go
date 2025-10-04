@@ -18,8 +18,9 @@ type Client struct {
 // Jira API response structures
 type jiraIssuesResponse struct {
 	Issues []struct {
-		Key    string `json:"key"`
-		Fields struct {
+		Key       string `json:"key"`
+		Expand    string `json:"expand"`
+		Fields    struct {
 			Summary        string `json:"summary"`
 			Status         struct {
 				Name string `json:"name"`
@@ -34,17 +35,17 @@ type jiraIssuesResponse struct {
 			StoryPoints    float64 `json:"customfield_10016"` // Common story points field
 			TimeEstimate   int     `json:"timeestimate"`
 			TimeSpent      int     `json:"timespent"`
-			Changelog      *struct {
-				Histories []struct {
-					Created string `json:"created"`
-					Items   []struct {
-						Field      string `json:"field"`
-						FromString string `json:"fromString"`
-						ToString   string `json:"toString"`
-					} `json:"items"`
-				} `json:"histories"`
-			} `json:"changelog"`
 		} `json:"fields"`
+		Changelog *struct {
+			Histories []struct {
+				Created string `json:"created"`
+				Items   []struct {
+					Field      string `json:"field"`
+					FromString string `json:"fromString"`
+					ToString   string `json:"toString"`
+				} `json:"items"`
+			} `json:"histories"`
+		} `json:"changelog"`
 	} `json:"issues"`
 	Total int `json:"total"`
 }
@@ -124,8 +125,8 @@ func (c Client) FetchIssues() ([]JiraStory, error) {
 			}
 
 			// Find when issue moved to "In Progress"
-			if issue.Fields.Changelog != nil {
-				for _, history := range issue.Fields.Changelog.Histories {
+			if issue.Changelog != nil {
+				for _, history := range issue.Changelog.Histories {
 					for _, item := range history.Items {
 						if item.Field == "status" &&
 							(strings.Contains(strings.ToLower(item.ToString), "progress") ||
