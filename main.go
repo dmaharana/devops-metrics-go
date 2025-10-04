@@ -9,6 +9,7 @@ import (
 	"devops-metrics/jira"
 	"devops-metrics/metrics"
 	"devops-metrics/report"
+	"devops-metrics/web"
 )
 
 func main() {
@@ -17,7 +18,11 @@ func main() {
 
 	// Parse command line flags
 	var sampleConfig bool
+	var runServer bool
+	var port string
 	flag.BoolVar(&sampleConfig, "sample-config", false, "Generate sample configuration file")
+	flag.BoolVar(&runServer, "server", false, "Run as web server")
+	flag.StringVar(&port, "port", "8080", "Port to run the server on (when using -server)")
 	flag.Parse()
 
 	if sampleConfig {
@@ -29,6 +34,14 @@ func main() {
 		return
 	}
 
+	if runServer {
+		// Start web server
+		server := web.NewServer()
+		server.Start(port)
+		return
+	}
+
+	// Original CLI mode
 	// Load configuration
 	cfg, err := config.LoadConfig("config.json")
 	if err != nil {
@@ -107,4 +120,5 @@ func main() {
 	fmt.Println("- Review metrics.json for detailed analysis")
 	fmt.Println("- Import metrics.csv into spreadsheet for visualization")
 	fmt.Println("- Schedule this script to run periodically for tracking trends")
+	fmt.Println("- Run with --server to start the web API")
 }

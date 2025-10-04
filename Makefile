@@ -1,10 +1,12 @@
 # DevOps Metrics Makefile
+BIN_NAME = devops-metrics
+BUILD_DIR = build
 
 .PHONY: build test clean sample run help
 
 # Build the application
 build:
-	go build -o devops-metrics main.go
+	go build --ldflags "-s -w" -o ${BUILD_DIR}/${BIN_NAME} main.go
 
 # Generate sample configuration
 sample:
